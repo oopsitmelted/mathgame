@@ -26,6 +26,9 @@ class Character():
     def moveX(self, dx):
         self.x += dx
 
+    def flipX(self):
+        self.img = pygame.transform.flip(self.img, True, False)
+
     def reset(self):
         self.x = self.initx
         self.y = self.inity
@@ -82,6 +85,8 @@ class Equation():
     def _generate(self):
         # Generate some random integers
 
+        op = random.choice(('+', '-'))
+
         range_low = 1000
         range_high = 9999
 
@@ -91,21 +96,21 @@ class Equation():
         if a < b:
             [a, b] = [b, a]
 
-        return (a,b)
+        return (a,b,op)
 
     def __init__(self, xy):
         self.x, self.y = xy
-        self.a, self.b = self._generate()
+        self.a, self.b, self.op = self._generate()
         self.ans = 0
         self.font = pygame.font.Font('/usr/share/fonts/TTF/DejaVuSansMono.ttf', 128)
 
     def reset(self):
-        self.a, self.b = self._generate()
+        self.a, self.b, self.op  = self._generate()
         self.ans = 0
 
     def draw(self, surface):
         a_render = self.font.render("%5d" % self.a, True, blueColor)
-        b_render = self.font.render("+%4d" % self.b, True, blueColor)
+        b_render = self.font.render(self.op + "%4d" % self.b, True, blueColor)
         ans_render = self.font.render("%5d" % self.ans, True, greenColor)
 
         aRect = a_render.get_rect().topleft = (self.x, self.y)
@@ -128,7 +133,12 @@ class Equation():
         return self.ans
 
     def checkAns(self):
-        if self.ans == self.a + self.b:
+        if self.op == '+':
+            correct_ans = self.a + self.b
+        elif self.op == '-':
+            correct_ans = self.a - self.b
+
+        if self.ans == correct_ans:
             return True
         else:
             return False
@@ -175,10 +185,14 @@ def main():
     #pygame.mixer.music.load(os.path.join('sound', 'Imperial_March.ogg'))
     #pygame.mixer.music.play(-1)
 
+    clock = pygame.time.Clock()
+
     failures = 0
     gameover = False
 
     while True:
+
+        clock.tick(60)
 
         # Draw the background
         windowSurface.blit(bg_img, (0,0))
@@ -189,7 +203,7 @@ def main():
         vader.draw(windowSurface)
         luke.draw(windowSurface)
 
-        if gameover == True:
+        if gameover:
             gameovertext.draw(windowSurface)
 
         # Refresh the screen
@@ -203,7 +217,7 @@ def main():
                 sys.exit()
 
             elif event.type == KEYDOWN:
-                if gameover == True:
+                if gameover:
                     gameover = False;
                     failures = 0
                     eq.reset()
